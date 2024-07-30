@@ -194,7 +194,7 @@ SELECT DAYNAME('1987-01-30');
 SELECT CURDATE(), EXTRACT(MONTH FROM CURDATE()) AS MONTH;
 SELECT CURDATE(), EXTRACT(YEAR FROM CURDATE()) AS YEAR;
 SELECT CURDATE(), EXTRACT(DAY FROM CURDATE()) AS DAY;
-SELECT CURDATE(), EXTRACT(WEEK FROM CURDATE()) AS WEEK; 
+SELECT CURDATE(), EXTRACT(WEEK FROM '2024-12-31') AS WEEK; -- 1년 중에 몇번째 주인가
 SELECT CURDATE(), EXTRACT(QUARTER FROM CURDATE()) AS QUARTER;  -- 분기 
 SELECT CURDATE(), EXTRACT(YEAR_MONTH FROM CURDATE()) AS "YEAR_MONTH"; 
 SELECT CURDATE(), EXTRACT(HOUR FROM CURTIME()) AS HOUR; 
@@ -205,14 +205,84 @@ SELECT CURDATE(), EXTRACT(second FROM CURTIME()) AS SECOND;
 SELECT empno, ename, hiredate FROM emp WHERE EXTRACT(QUARTER FROM hiredate) = 1;
 
 #emp 테이블에서 모든 직원의 사번, 이름, 입사일, 입사분기 조회 
-SELECT empno, ename, hiredate, EXTRACT(QUARTER FROM hiredate) AS 입사분기 FROM emp;
+SELECT empno, ename, hiredate, EXTRACT(QUARTER FROM hiredate) AS 입사분기 FROM emp ORDER BY 4;
+
+#TIME_TO_SEC : 시간을 초로 변환 (0시를 기준으로 하는 초단위)
+SELECT CURTIME(), TIME_TO_SEC(CURTIME());
+
+#TIMEDIFF
+SELECT CURTIME(), TIMEDIFF(CURTIME(), '09:00:00');
 
 -- -----------------------------------------------------------------------------------------
 -- 숫자 함수 
 -- -----------------------------------------------------------------------------------------
+#count(*) , count(empno) : 조건에 만족하는 레코드 (행) 수 
+SELECT COUNT(*) FROM emp;
+SELECT COUNT(empno) FROM emp;  
+SELECT COUNT(comm) FROM emp; -- 컬럼에 해당하는 값이 null이면 count에서 제외된다. 
 
+#student 테이블에서 4학년인 학생의 수 
+SELECT COUNT(*) FROM student WHERE grade = 4;
+-- SELECT COUNT(grade) FROM student WHERE grade = 4;
 
+#student 테이블에서 부전공을 선택한 학생의 수 
+SELECT COUNT(deptno2) FROM student; -- 심플한게 성능이 좋다
+SELECT COUNT(*) FROM student WHERE deptno2 IS NOT NULL;
 
+#sum(컬럼명) : 해당 컬럼의 합 
+SELECT SUM(sal) FROM emp;
+SELECT SUM(comm) FROM emp;
+SELECT SUM(sal), SUM(comm), SUM(sal) + SUM(comm) FROM emp; -- null이 있어도 sum함수에서 자동처리해줌
+
+#professor 테이블에서 학과번호가 101인 교수들의 급여와 보너스의 총합 조회
+SELECT SUM(pay), SUM(bonus), SUM(pay)+SUM(bonus) from professor WHERE deptno = 101;
+SELECT SUM(pay), SUM(bonus), SUM(pay + ifnull(bonus,0)) from professor WHERE deptno = 101; -- 이럴땐 ifnull처리해줘야한다.
+
+#AVG(컬럼명) : 해당 컬럼의 평균
+SELECT SUM(sal), COUNT(*), SUM(sal)/COUNT(*) , AVG(Sal) FROM emp;
+
+#emp 테이블에서 comm의 평균 구하기 
+SELECT SUM(comm), COUNT(*), SUM(comm)/COUNT(*) , AVG(comm) FROM emp;  -- null이 들어간 데이터는 평균에서 제외되버림
+SELECT AVG(ifnull(comm,0)) FROM emp; -- ifnull로 해서 count를 세어주고 평균을 구해야 한다. 
+
+#professor 테이블에서 교수들의 교수번호, 이름, 월급여, 보너스, 연봉 조회 (연봉 : 12 * pay + bonus) 
+SELECT profno, NAME, pay, bonus, (12*pay + ifnull(bonus,0)) AS 연봉 FROM professor;
+
+#MAX(컬럼명) : 컬럼에서 가장 큰 값
+SELECT MAX(sal) FROM emp;
+
+#MIN(컬럼명) : 컬럼에서 가장 작은 값
+SELECT min(sal) FROM emp;
+
+#group by 
+SELECT deptno, COUNT(*) FROM emp GROUP BY deptno; -- 부서번호 별로 그룹화 해서 부서별 count를 수행
+SELECT deptno, sum(sal), avg(sal) FROM emp GROUP BY deptno;
+SELECT deptno, avg(sal) FROM emp GROUP BY deptno;
+SELECT deptno, min(sal), MAX(sal) FROM emp GROUP BY deptno;
+
+#student테이블에서 학년별 평균 키 조회 (학년, 평균키)
+SELECT grade, AVG(height) as average FROM student GROUP BY grade;
+SELECT studno, grade, min(height), max(height) FROM student GROUP BY grade; 
+	-- min, max인 사람이 여러명있을 수 있다.
+	-- maria DB는 어떻게든 출력해주는데 oracle에서는 에러가 난다. 
+	-- group by grade 컬럼으로 했으면, select 문 안에 grade만 있도록 해야 한다. 
+
+SELECT deptno as NO, COUNT(*) FROM emp GROUP BY NO;  -- group by에 alias 기준으로 그룹화 해도 된다.
+
+SELECT deptno, job, COUNT(*), SUM(sal) FROM emp GROUP BY deptno, job;  -- deptno, job이 같은 것을 하나로 그룹화
+
+#having : 그룹핑 한 것에 대한 조건 
+#emp 테이블에서 평균 급여가 2000 이상인 부서의 부서번호, 평균급여 조회 
+SELECT deptno, AVG(sal) FROM emp GROUP BY deptno HAVING avg(sal) >= 2000;
+
+#student 테이블에서 각 학과와 학년별 평균 몸무게가 50이상인 학생의 학과, 학년 몸무게 조회
+SELECT deptno1, grade, avg(weight) FROM student GROUP BY deptno1, grade HAVING AVG(weight) >= 50 ORDER BY grade;
+
+SELECT deptno1, grade, COUNT(*), AVG(ifnull(weight,0))
+FROM student
+GROUP BY deptno1, grade
+HAVING AVG(ifnull(weight,0)) >= 50
+ORDER BY deptno1, grade;
 
 
 
