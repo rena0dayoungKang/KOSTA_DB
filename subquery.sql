@@ -391,4 +391,83 @@ WHERE e.total > (SELECT AVG(total)
 						FROM student s2 JOIN exam_01 e2 USING (studno) 
 						WHERE s2.grade = s.grade AND s2.deptno1 = s.deptno1);
 
+# (student, professor) : 담당학생이 있는 교수들의 교수번호, 교수명 조회 
+-- 1. stu 테이블에서 교수목록 찾기 distinct를 이용해서 중복된 레코드 삭제 
+SELECT distinct(profno) FROM student;
+-- 2. 1번방법, 없는 교수는 prof 테이블에서 제외 
+SELECT profno, NAME 
+FROM professor
+WHERE profno IN(SELECT distinct(profno) FROM student);
+--     2번방법 
+SELECT p.profno, p.NAME
+FROM professor p
+WHERE EXISTS (SELECT * FROM student WHERE profno = p.profno);
+
+
+# (student, professor) : 담당학생이 없는 교수들의 교수번호, 교수명 조회 
+SELECT profno, NAME 
+FROM professor
+WHERE profno not IN(SELECT distinct(profno) FROM student where pforno IS NOT null);
+
+SELECT p.profno, p.NAME
+FROM professor p
+WHERE not EXISTS (SELECT * FROM student WHERE profno = p.profno);
+
+
+
+# (emp) : 매니저인 직원의 사번, 이름 조회 
+SELECT mgr FROM emp WHERE mgr IS NOT NULL;  -- 매니저 번호 목록 조회 
+
+-- IN 사용  
+SELECT empno, ename
+FROM emp 
+WHERE empno in(SELECT mgr FROM emp WHERE mgr IS NOT NULL);
+
+-- EXISTS 사용 
+SELECT e.EMPNO, e.ENAME
+FROM emp e
+WHERE EXISTS (SELECT * FROM emp WHERE mgr = e.EMPNO);
+
+# (emp, dept) : 매니저가 아닌 직원의 사번, 이름 조회 
+SELECT empno, ename
+FROM emp 
+WHERE empno not in(SELECT mgr FROM emp WHERE mgr IS NOT NULL);
+
+
+# (emp2) : 직원들 중 자신의 직급의 평균연봉과 같거나 많이 받는 사람들의 이름, 직급, 연봉 조회
+-- 단, 직급이 없으면 조회하지 않는다.
+
+-- 1. 한행 한행 직급을 참조하는 서브쿼리를 만들기  
+-- SELECT AVG(pay), if(POSITION != '', POSITION, '사원')직급 FROM emp2 GROUP BY POSITION;
+
+-- SELECT e.NAME, e.`POSITION`, e.PAY
+-- FROM emp2 e
+-- WHERE e.PAY >= (SELECT AVG(pay), if(POSITION != '', POSITION, '사원')직급 FROM emp2 GROUP BY POSITION);
+
+-- 선생님 답 
+SELECT NAME, POSITION, pay
+FROM emp2 e
+WHERE e.`POSITION` <> '' AND e.PAY > (SELECT AVG(pay) FROM emp2 WHERE POSITION = e.POSITION);
+
+SELECT POSITION, AVG(pay)
+FROM emp2
+GROUP BY POSITION;
+
+-- limit
+SELECT * FROM emp ORDER BY sal DESC LIMIT 0,5;  		-- limit만 0부터 시작, 첫번째(0) 부터 5개 
+SELECT * FROM emp ORDER BY sal DESC LIMIT 10,5;			-- 
+SELECT * FROM emp ORDER BY sal DESC LIMIT 5 OFFSET 0; -- 첫번째(0) 부터 5개 
+	-- 게시판에서 데이터가 많을 때, 페이지네이션 기능 
+	
+# (exam_01, student) : 1등부터 10등까지 학생의 학번, 이름, 점수 조회 
+SELECT * FROM exam_01 ORDER BY total DESC LIMIT 0,10;
+
+SELECT s.studno, s.name, e.total
+FROM student s JOIN exam_01 e
+ON s.studno = e.studno
+ORDER BY e.total DESC LIMIT 0,10;
+
+
+
+
 

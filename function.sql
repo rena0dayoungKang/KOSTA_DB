@@ -283,7 +283,3 @@ FROM student
 GROUP BY deptno1, grade
 HAVING AVG(ifnull(weight,0)) >= 50
 ORDER BY deptno1, grade;
-
-
-
-
