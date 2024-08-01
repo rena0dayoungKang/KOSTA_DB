@@ -1,5 +1,5 @@
 -- SQL
--- DML(Data Manipulation Language) : 데이터 조작어 (select, insert, delete, update) :  C(create: insert) U(update) R(read: select) D(Delete)
+-- DML(Data Manipulation Language) : 데이터 조작어 (select, insert, delete,update) :  C(create: insert) U(update) R(read: select) D(Delete)
 -- DDL(Data Definition Language) : 데이터 정의어 (create, alter, drop, truncate : 초기화, rename)
 -- DCL(Data control Language) : 데이터 제어어 (grant, revoke)
 -- TCL(Transaction control Language) : 트랜젝션 제어어 (commit, rollback)
@@ -84,3 +84,8 @@ COMMIT;					-- start transaction 이전으로 복구
 ROLLBACK;				-- start transaction 이후 변경 반영
 
 SELECT * FROM emp_sub;
+
+
+
+
+
